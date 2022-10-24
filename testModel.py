@@ -42,9 +42,9 @@ while True:
         # returns an array of percentages. Example:[0.2,0.8] meaning its 20% sure
         # it is the first label and 80% sure its the second label.
         probabilities = model.predict(image)
+        print(probabilities)
         # Print what the highest value probabilitie label
         classIndex = np.argmax(probabilities)
-        print(classIndex)
         probabilityValue = np.amax(probabilities)
         if classIndex == 0:
             print("test")

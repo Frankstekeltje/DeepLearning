@@ -1,4 +1,5 @@
 # importing libraries
+from tkinter import Frame
 import cv2
 import os
 import numpy as np
@@ -8,79 +9,27 @@ from keras.datasets import mnist
 import matplotlib.pyplot as plt
 import keras.layers as layers
 from keras.models import Model
+from keras.models import load_model
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPool2D, Dense, Flatten
 
 #loading dataset
+(train_X, train_y), (val_X, val_y) = mnist.load_data()
 
-#clearing dataset from corrupted images
-num_passed = 0
-for images in ("frank", "caroline"):
-    folder_path = os.path.join('C:\FaceDetection\DeepLearning\images', images)
-    for fname in os.listdir(folder_path):
-        fpath = os.path.join(folder_path, fname)
-        try:
-            fobj = open(fpath, "rb")
-            is_jpg = tf.compat.as_bytes("JFIF") in fobj.peek(10)
-        finally:
-            fobj.close()
-
-        if not is_jpg:
-            num_passed += 1
-            #Delete corrupted images
-            os.remove(fpath)
-
-print("Deleted items %d" % num_passed)
-
-image_size = (180, 180)
-batch_size = 32
-
-labels = ("Frank", "Caroline")
-
-for images in labels:
-    train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    "C:\FaceDetection\DeepLearning\images",
-    labels="inferred",
-    validation_split=0.2,
-    subset="training",
-    seed=1337,
-    image_size=image_size,
-    batch_size=batch_size,
-    )
-
-    val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    "C:\FaceDetection\DeepLearning\images",
-    validation_split=0.2,
-    subset="validation",
-    seed=1337,
-    image_size=image_size,
-    batch_size=batch_size,
-    )
-
-plt.figure(figsize=(10,10))
-for images, labels in train_ds.take(1):
-    for i in range(9):
-        ax = plt.subplot(3,3, i + 1)
-        plt.imshow(images[1].numpy().astype("uint8"))
-        plt.title(int(labels[i]))
-        plt.axis("off")
-
-# (train_X, train_y), (val_X, val_y) = mnist.load_data()
-
-#normalizing the dataset
-# train_X, val_X = train_X/255, val_X/255
+# normalizing the dataset
+train_X, val_X = train_X/255, val_X/255
 
 # visualizing 9 rndom digits from the dataset
-# for i in range(331,340):
-#     plt.subplot(i)
-#     a = np.random.randint(0, train_X.shape[0], 1)
-#     plt.imshow(train_X[a[0]], cmap = plt.get_cmap('binary'))
+for i in range(331,340):
+    plt.subplot(i)
+    a = np.random.randint(0, train_X.shape[0], 1)
+    plt.imshow(train_X[a[0]], cmap = plt.get_cmap('binary'))
 
-# plt.tight_layout()
-# plt.show()
+plt.tight_layout()
+plt.show()
 
-def create_model(input_shape = (28,28,1)):
-    model = keras.Sequential([
+def create_model(input_shape, num_classes):
+    model = keras.Sequential([   
     layers.Conv2D(filters = 32, kernel_size = 3, activation = 'relu', padding = 'same', input_shape = input_shape),
     layers.MaxPool2D(pool_size = 2),
     
@@ -92,23 +41,25 @@ def create_model(input_shape = (28,28,1)):
     
     layers.Flatten(),
     layers.Dense(units = 54, activation = 'relu'),
-    layers.Dense(units = 10, activation = 'softmax')])
+    layers.Dense(units = num_classes, activation = 'softmax')])
     
     return model
 
-# def compile_model(model, optimizer='adam', loss='categorical_crossentropy'):
-#     model.compile(optimizer=optimizer, loss=loss, metrics=["accuracy"])
+def compile_model(model, loss, optimizer='adam'):
+    model.compile(optimizer=optimizer, loss=loss, metrics=["accuracy"])
 
-# def fitting_model(model, x, y, epoch):
-#     model.fit(x,y, shuffle = True, epochs = epoch)
+    model.summary()
 
-# #reshaping the independant variables
-# train_X = train_X.reshape(train_X.shape[0], 28, 28, 1)
-# val_X = val_X .reshape(val_X.shape[0], 28, 28, 1)
+def fitting_model(model, x, y, epoch):
+    model.fit(x,y, shuffle = True, epochs = epoch)
 
-# #encoding the dependant variable
-# train_y = np.eye(10)[train_y]
-# val_y = np.eye(10)[val_y]
+# reshaping the independant variables
+train_X = train_X.reshape(train_X.shape[0], 28, 28, 1)
+val_X = val_X .reshape(val_X.shape[0], 28, 28, 1)
+
+#encoding the dependant variable
+train_y = np.eye(10)[train_y]
+val_y = np.eye(10)[val_y]
 
 # #creating model
 # model = create_model((28,28,1))
@@ -117,28 +68,28 @@ def create_model(input_shape = (28,28,1)):
 
 # #training model
 # history = model.fit(train_X, train_y, validation_data = (val_X, val_y), batch_size = 150, epochs = 80)
-# # model.save("cnn_digitclass.model") #model will be save in root folder to be later called out for prediction
+# model.save("cnn_digitclass.model") #model will be save in root folder to be later called out for prediction
 
-# #model performance visualization
+#model performance visualization
 # f = plt.figure(figsize=(20,8))
 
-# #accuracy
+#accuracy
 # plt1 = f.add_subplot(121)
 # plt1.plot(history.history['accuracy'], label = str('Training accuracy'))
 # plt1.plot(history.history['val_accuracy'], label = str('Validation accuracy'))
 # plt.legend()
 # plt.title('accuracy')
 
-# #loss
+#loss
 # plt2 = f.add_subplot(122)
 # plt2.plot(history.history['loss'], label = str('Training loss'))
 # plt2.plot(history.history['val_loss'], label = str('Validation loss'))
 # plt.legend()
 # plt.title('loss')
 
-# plt.show()
+plt.show()
 while True:
-    img = cv2.imread("sample_img.jpg") #loading input image
+    img = cv2.imread("sample_img3.png") #loading input image
     img = cv2.resize(img, (28, 28), interpolation = cv2.INTER_AREA) #resizing to input shape
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #chaging to grayscale format
     img = cv2.bitwise_not(img) #the color scale was inverted, correcting inverted color scale
@@ -153,7 +104,7 @@ while True:
 predict_data = np.array([img])/255 #changing image data to array
 predict_data = predict_data.reshape(1,28, 28, 1) #reshaping to input shape
 
-#predicting the input 
+# predicting the input 
 from keras import models
 model = models.load_model('cnn_digitclass.model') #loading pre-savedd model
 prediction = model.predict(predict_data) #gives array
